@@ -283,6 +283,92 @@ canvas { display: block; width: 100%; }
   .out-pct-put, .out-pct-call { font-size: 28px; }
   .levels-table th, .levels-table td { padding: 6px 6px; font-size: 12px; }
 }
+
+/* ── Historical Log ── */
+.hist-card {
+  background: #090f20;
+  border: 1px solid #1a2a4a;
+  border-radius: 2px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+.hist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hist-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hist-controls select {
+  background: #0d1830;
+  border: 1px solid #1a2a4a;
+  color: #7a9abf;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.hist-status { font-size: 9px; letter-spacing: 1px; color: #2a4a6a; }
+.hist-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.hist-table th {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #4a6a9a;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  text-align: right;
+  border-bottom: 1px solid #0f1d35;
+  font-weight: normal;
+  white-space: nowrap;
+}
+.hist-table th:first-child,
+.hist-table th:nth-child(2),
+.hist-table th:nth-child(3),
+.hist-table th:nth-child(4) { text-align: left; }
+.hist-table td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid #080f1e;
+  font-family: 'Courier New', monospace;
+  color: #5a7a9a;
+  white-space: nowrap;
+}
+.hist-table td:first-child { text-align: left; color: #4a6a8a; font-size: 10px; }
+.hist-table td:nth-child(2) { text-align: left; color: #7a9abf; }
+.hist-table td:nth-child(3),
+.hist-table td:nth-child(4) { text-align: left; }
+.hist-table tr:hover td { background: #0a1428; }
+.hist-table tr.today-row td { background: #0d1830; }
+.hist-table tr.today-row td:first-child { color: #00d4ff; }
+.col-put  { color: rgba(255,59,107,0.7) !important; }
+.col-call { color: rgba(0,255,157,0.7) !important; }
+td.col-put  { color: rgba(255,59,107,0.9) !important; }
+td.col-call { color: rgba(0,255,157,0.9) !important; }
+.hist-empty {
+  text-align: center !important;
+  color: #2a4a6a !important;
+  padding: 20px !important;
+  letter-spacing: 2px;
+  font-size: 10px !important;
+}
+.vix-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 1px;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.vb-low   { background: rgba(0,255,157,0.1);  color: #00ff9d; border: 1px solid rgba(0,255,157,0.2); }
+.vb-mid   { background: rgba(0,212,255,0.1);  color: #00d4ff; border: 1px solid rgba(0,212,255,0.2); }
+.vb-high  { background: rgba(255,165,0,0.1);  color: #ffa500; border: 1px solid rgba(255,165,0,0.2); }
+.vb-xhigh { background: rgba(255,59,107,0.1); color: #ff3b6b; border: 1px solid rgba(255,59,107,0.2); }
 </style>
 </head>
 <body>
@@ -415,6 +501,43 @@ canvas { display: block; width: 100%; }
   <div class="stat-cell">
     <div class="stat-label">VIX Bucket Threshold</div>
     <div class="stat-value" id="statThreshold">—</div>
+  </div>
+</div>
+
+<!-- ── HISTORICAL LOG ─────────────────────────────────────────── -->
+<div class="hist-card" id="histCard">
+  <div class="hist-header">
+    <div class="section-title">◈ Historical Strike Log</div>
+    <div class="hist-controls">
+      <select id="histRows" onchange="loadHistory()">
+        <option value="20">Last 20 days</option>
+        <option value="50">Last 50 days</option>
+        <option value="100">Last 100 days</option>
+        <option value="300">All 2025–2026</option>
+      </select>
+      <div class="hist-status" id="histStatus">Loading...</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="hist-table" id="histTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>SPX Open</th>
+          <th>VIX</th>
+          <th>Regime</th>
+          <th class="col-put">Put 98%</th>
+          <th class="col-call">Call 98%</th>
+          <th class="col-put">Put 99%</th>
+          <th class="col-call">Call 99%</th>
+          <th class="col-put">Put 100%</th>
+          <th class="col-call">Call 100%</th>
+        </tr>
+      </thead>
+      <tbody id="histBody">
+        <tr><td colspan="10" class="hist-empty">Loading historical data...</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -674,8 +797,78 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(update, 100);
 });
 
-// Initial state
-update();
+// ── HISTORICAL LOG ───────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://cepgijxkjdlpbbkglynx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcGdpanhramRscGJia2dseW54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzcxOTcsImV4cCI6MjA4ODA1MzE5N30.dpbJbnPOPVGyEQW5GosPxmn_hcOOwYGgjEqNgoaJV3U';
+
+function vixBadge(bucket) {
+  if (bucket <= 3)  return `<span class="vix-badge vb-low">B${bucket} LOW</span>`;
+  if (bucket <= 6)  return `<span class="vix-badge vb-mid">B${bucket} MID</span>`;
+  if (bucket <= 8)  return `<span class="vix-badge vb-high">B${bucket} HIGH</span>`;
+  return `<span class="vix-badge vb-xhigh">B${bucket} XHIGH</span>`;
+}
+
+function fmtDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+}
+
+async function loadHistory() {
+  const limit = document.getElementById('histRows').value;
+  const statusEl = document.getElementById('histStatus');
+  const tbody = document.getElementById('histBody');
+
+  statusEl.textContent = 'Loading...';
+  tbody.innerHTML = `<tr><td colspan="10" class="hist-empty">FETCHING DATA...</td></tr>`;
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/daily_strikes?select=*&order=date.desc&limit=${limit}`;
+    const resp = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      }
+    });
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const rows = await resp.json();
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="10" class="hist-empty">NO DATA YET — RUN BACKFILL FIRST</td></tr>`;
+      statusEl.textContent = '0 rows';
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    tbody.innerHTML = rows.map(r => {
+      const isToday = r.date === today;
+      const rowClass = isToday ? ' class="today-row"' : '';
+      return `<tr${rowClass}>
+        <td>${fmtDate(r.date)}${isToday ? ' ◀ TODAY' : ''}</td>
+        <td>${r.spx_open.toFixed(1)}</td>
+        <td>${r.prior_vix_close.toFixed(2)}</td>
+        <td>${vixBadge(r.vix_bucket)}</td>
+        <td class="col-put">${r.put_98.toLocaleString()}</td>
+        <td class="col-call">${r.call_98.toLocaleString()}</td>
+        <td class="col-put">${r.put_99.toLocaleString()}</td>
+        <td class="col-call">${r.call_99.toLocaleString()}</td>
+        <td class="col-put">${r.put_100.toLocaleString()}</td>
+        <td class="col-call">${r.call_100.toLocaleString()}</td>
+      </tr>`;
+    }).join('');
+
+    statusEl.textContent = `${rows.length} days loaded`;
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="10" class="hist-empty">ERROR LOADING DATA: ${e.message}</td></tr>`;
+    statusEl.textContent = 'error';
+    console.error(e);
+  }
+}
+
+// Load on page init
+loadHistory();
 </script>
 </body>
 </html>
