@@ -1,0 +1,23 @@
+name: Daily Outcome Logger
+
+on:
+  schedule:
+    - cron: '15 21 * * 1-5'   # 4:15 PM EST (winter)
+    - cron: '15 20 * * 1-5'   # 4:15 PM EDT (summer)
+  workflow_dispatch:           # manual trigger for backfill
+
+jobs:
+  log_outcomes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install yfinance requests pandas
+      - name: Run outcome logger
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python log_outcomes.py
