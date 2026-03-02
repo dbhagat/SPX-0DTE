@@ -56,6 +56,9 @@ def load_bucket_data():
     raw = match.group(1).rstrip(";")
     # Convert JS object keys (1:, 2:, ...) to valid JSON
     raw = re.sub(r"(\d+):", r'"\1":', raw)
+    # Remove trailing commas (valid JS, invalid JSON)
+    raw = re.sub(r",\s*\}", "}", raw)
+    raw = re.sub(r",\s*\]", "]", raw)
     return {int(k): v for k, v in json.loads(raw).items()}
 
 
