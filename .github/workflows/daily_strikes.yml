@@ -1,0 +1,36 @@
+name: Daily Strike Logger
+
+on:
+  schedule:
+    # 9:35 AM ET = 13:35 UTC (EST) / 14:35 UTC (EDT)
+    # Using 13:35 UTC to cover EST (Nov-Mar); adjust to 13:35 in summer if needed
+    # A safe bet: run at both times with a duplicate-check in the script
+    - cron: '35 13 * * 1-5'   # 9:35 AM EST (winter)
+    - cron: '35 14 * * 1-5'   # 10:35 AM EST (backup / EDT summer)
+
+  # Allow manual trigger from GitHub Actions tab for testing
+  workflow_dispatch:
+
+jobs:
+  log_strikes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance requests pytz
+
+      - name: Run strike logger
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python fetch_and_save.py
