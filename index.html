@@ -6,147 +6,231 @@
 <title>Options Signal Dashboard</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: #070d1a;
-  min-height: 100vh;
-  padding: 20px;
-  font-family: 'Courier New', monospace;
-  color: #c8d8f0;
+
+:root {
+  --bg:       #f4f6f9;
+  --surface:  #ffffff;
+  --border:   #e2e8f0;
+  --border2:  #edf2f7;
+  --text:     #1a202c;
+  --muted:    #718096;
+  --dim:      #a0aec0;
+  --put:      #c53030;
+  --call:     #276749;
+  --put-bg:   #fff5f5;
+  --call-bg:  #f0fff4;
+  --put-border: #feb2b2;
+  --call-border: #9ae6b4;
+  --accent:   #2b6cb0;
+  --label:    #4a5568;
 }
 
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 24px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+}
+
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #1a2a4a;
-  padding-bottom: 12px;
-  margin-bottom: 18px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
 }
-.header-title { font-size: 11px; letter-spacing: 4px; color: #00d4ff; text-transform: uppercase; }
-.header-line { flex: 1; height: 1px; background: linear-gradient(to right, #1a3a6a, transparent); }
-.header-meta { font-size: 9px; color: #2a4a6a; letter-spacing: 2px; }
+.header-title { font-size: 13px; font-weight: 700; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; }
+.header-line { flex: 1; height: 1px; background: var(--border); }
+.header-meta { font-size: 10px; color: var(--dim); letter-spacing: 1px; }
 
-/* Inputs section */
-.inputs-card {
-  background: #090f20;
-  border: 1px solid #1a2a4a;
-  border-radius: 2px;
-  padding: 16px 20px;
+/* ── Cards ── */
+.inputs-card, .levels-card, .chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
   margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+
 .section-title {
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: #00d4ff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--muted);
   text-transform: uppercase;
   margin-bottom: 14px;
 }
+
+/* ── Inputs ── */
 .inputs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 14px 20px;
 }
 .input-group { display: flex; flex-direction: column; gap: 5px; }
-.input-label { font-size: 9px; letter-spacing: 2px; color: #4a6a9a; text-transform: uppercase; }
-.input-sub { font-size: 8px; color: #2a3a5a; letter-spacing: 1px; margin-top: 2px; }
+.input-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: var(--label); text-transform: uppercase; }
+.input-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
 
 input[type=number] {
-  background: #0a1428;
-  border: 1px solid #1a3a6a;
-  border-radius: 2px;
-  color: #00d4ff;
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
-  padding: 7px 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 12px;
   width: 100%;
   outline: none;
   -moz-appearance: textfield;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-input[type=number]:focus { border-color: #00d4ff; box-shadow: 0 0 6px rgba(0,212,255,0.15); }
-input[type=number].input-highlight { border-color: #3a6aaa; }
+input[type=number]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43,108,176,0.12); }
+input[type=number].input-highlight { border-color: var(--accent); }
 
-.win-rate-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #0f1d35;
-}
-.win-rate-row .input-group { flex: 0 0 130px; }
 input[type=range] {
   flex: 1;
   height: 4px;
   cursor: pointer;
-  accent-color: #00d4ff;
+  accent-color: var(--accent);
   margin-bottom: 8px;
 }
-.win-rate-hint {
-  font-size: 8px;
-  color: #2a4a6a;
-  letter-spacing: 1px;
-  flex: 1;
-  padding-bottom: 6px;
-}
+.win-rate-hint { font-size: 10px; color: var(--dim); flex: 1; padding-bottom: 6px; }
 
-/* VIX bucket indicator */
-.vix-bucket-row {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #0f1d35;
-}
-.vix-bucket-label { font-size: 9px; letter-spacing: 2px; color: #4a6a9a; text-transform: uppercase; margin-bottom: 8px; }
-.vix-bars {
-  display: flex;
-  gap: 3px;
-  align-items: flex-end;
-  height: 24px;
-}
-.vix-bar {
-  flex: 1;
-  background: #1a2a4a;
-  border-radius: 1px;
-  height: 8px;
-  transition: all 0.3s;
-  position: relative;
-}
-.vix-bar.active {
-  background: #00d4ff;
-  box-shadow: 0 0 8px rgba(0,212,255,0.5);
-}
+/* ── VIX bucket ── */
+.vix-bucket-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.vix-bucket-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: var(--label); text-transform: uppercase; margin-bottom: 8px; }
+.vix-bars { display: flex; gap: 3px; align-items: flex-end; height: 24px; }
+.vix-bar { flex: 1; background: var(--border); border-radius: 2px; height: 8px; transition: all 0.3s; }
+.vix-bar.active { background: var(--accent); box-shadow: 0 0 6px rgba(43,108,176,0.4); }
 .vix-bar.low  { height: 5px; }
 .vix-bar.mid  { height: 10px; }
 .vix-bar.high { height: 18px; }
 .vix-bar.vhigh { height: 24px; }
-.vix-bucket-text {
-  font-size: 9px;
-  color: #00d4ff;
-  margin-top: 5px;
-  letter-spacing: 1px;
-  min-height: 14px;
-}
+.vix-bucket-text { font-size: 11px; font-weight: 600; color: var(--accent); margin-top: 6px; min-height: 16px; }
 
-/* SPX Open estimate banner */
+/* ── SPX Open banner ── */
 .spx-open-banner {
-  background: #090f20;
-  border: 1px solid #1a3a6a;
-  border-left: 3px solid #00d4ff;
-  border-radius: 2px;
-  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 18px;
   margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .banner-item { display: flex; flex-direction: column; gap: 3px; }
-.banner-label { font-size: 8px; letter-spacing: 2px; color: #4a6a9a; text-transform: uppercase; }
-.banner-value { font-size: 20px; color: #00d4ff; font-weight: 700; letter-spacing: -0.5px; }
-.banner-sep { width: 1px; height: 32px; background: #1a2a4a; }
+.banner-label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+.banner-value { font-size: 22px; font-weight: 700; color: var(--accent); font-family: 'SF Mono', monospace; letter-spacing: -0.5px; }
+.banner-sep { width: 1px; height: 36px; background: var(--border); }
 
-/* Output cards */
+/* ── Strike level cards (THE MAIN SHOW) ── */
+.levels-card { padding: 16px 20px; }
+
+/* Big prominent strike grid replacing table */
+.strike-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.strike-row-card {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.strike-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.strike-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--label);
+  text-transform: uppercase;
+}
+.strike-row-label.active-label { color: var(--accent); }
+
+.strike-row-body {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  min-height: 72px;
+}
+
+.strike-cell-put, .strike-cell-call {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.strike-cell-put  { background: var(--put-bg); }
+.strike-cell-call { background: var(--call-bg); }
+.strike-cell-div  { background: var(--border); width: 1px; }
+
+.sc-side-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.strike-cell-put  .sc-side-label { color: var(--put); }
+.strike-cell-call .sc-side-label { color: var(--call); }
+
+.sc-strike-val {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.strike-cell-put  .sc-strike-val { color: var(--put); }
+.strike-cell-call .sc-strike-val { color: var(--call); }
+
+.sc-pct-move {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'SF Mono', monospace;
+}
+.strike-cell-put  .sc-pct-move { color: rgba(197,48,48,0.65); }
+.strike-cell-call .sc-pct-move { color: rgba(39,103,73,0.65); }
+
+/* Active row highlight */
+.strike-row-card.row-active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(43,108,176,0.12); }
+.strike-row-card.row-active .strike-row-header { background: #ebf4ff; border-bottom-color: #bee3f8; }
+
+/* placeholder state */
+.sc-strike-val.placeholder { color: var(--dim); font-size: 22px; }
+
+/* ── Custom win rate ── */
+.custom-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.custom-row .input-group { flex: 0 0 110px; }
+.custom-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: var(--label); text-transform: uppercase; margin-bottom: 4px; }
+
+/* ── Output cards (put/call big numbers at top) ── */
 .output-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -154,42 +238,34 @@ input[type=range] {
   margin-bottom: 14px;
 }
 .out-card {
-  background: #090f20;
-  border-radius: 2px;
+  background: var(--surface);
+  border-radius: 8px;
   padding: 16px 20px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
-.out-card-put  { border: 1px solid rgba(255,59,107,0.25); }
-.out-card-call { border: 1px solid rgba(0,255,157,0.25); }
-.out-card-put::before  { background: #ff3b6b; }
-.out-card-call::before { background: #00ff9d; }
+.out-card-put  { border: 1.5px solid var(--put-border); background: var(--put-bg); }
+.out-card-call { border: 1.5px solid var(--call-border); background: var(--call-bg); }
 .out-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 3px; height: 100%;
-  opacity: 0.7;
+  width: 4px; height: 100%;
 }
-.out-card-put::after  { background: linear-gradient(to right, rgba(255,59,107,0.5), transparent); }
-.out-card-call::after { background: linear-gradient(to right, rgba(0,255,157,0.5), transparent); }
-.out-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-}
-.out-label { font-size: 9px; letter-spacing: 3px; color: #4a6a9a; text-transform: uppercase; margin-bottom: 5px; }
-.out-pct-put  { font-size: 36px; font-weight: 700; color: #ff3b6b; letter-spacing: -1px; line-height: 1; }
-.out-pct-call { font-size: 36px; font-weight: 700; color: #00ff9d; letter-spacing: -1px; line-height: 1; }
-.out-strike-put  { font-size: 14px; color: rgba(255,59,107,0.7); margin-top: 4px; }
-.out-strike-call { font-size: 14px; color: rgba(0,255,157,0.7); margin-top: 4px; }
-.out-sub { font-size: 8px; color: #3a5a8a; margin-top: 5px; letter-spacing: 1px; }
-.out-win-pct { font-size: 10px; margin-top: 4px; letter-spacing: 1px; }
-.out-win-pct-put  { color: rgba(255,59,107,0.6); }
-.out-win-pct-call { color: rgba(0,255,157,0.6); }
+.out-card-put::before  { background: var(--put); }
+.out-card-call::before { background: var(--call); }
+.out-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+.out-pct-put  { font-size: 36px; font-weight: 800; color: var(--put); letter-spacing: -1px; line-height: 1; font-family: 'SF Mono', monospace; }
+.out-pct-call { font-size: 36px; font-weight: 800; color: var(--call); letter-spacing: -1px; line-height: 1; font-family: 'SF Mono', monospace; }
+.out-strike-put  { font-size: 13px; color: rgba(197,48,48,0.7); margin-top: 4px; font-family: 'SF Mono', monospace; }
+.out-strike-call { font-size: 13px; color: rgba(39,103,73,0.7); margin-top: 4px; font-family: 'SF Mono', monospace; }
+.out-sub { font-size: 9px; color: var(--dim); margin-top: 5px; }
+.out-win-pct { font-size: 10px; margin-top: 4px; }
+.out-win-pct-put  { color: rgba(197,48,48,0.6); }
+.out-win-pct-call { color: rgba(39,103,73,0.6); }
 
-/* Stats row */
+/* ── Stats ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -197,100 +273,51 @@ input[type=range] {
   margin-bottom: 14px;
 }
 .stat-cell {
-  background: #090f20;
-  border: 1px solid #1a2a4a;
-  padding: 8px 12px;
-  border-radius: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
-.stat-label { font-size: 8px; letter-spacing: 2px; color: #4a6a9a; text-transform: uppercase; margin-bottom: 3px; }
-.stat-value { font-size: 11px; color: #c8d8f0; }
+.stat-label { font-size: 9px; font-weight: 600; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.stat-value { font-size: 12px; font-weight: 600; color: var(--text); font-family: 'SF Mono', monospace; }
 
-/* Canvas chart */
-.chart-card {
-  background: #090f20;
-  border: 1px solid #1a2a4a;
-  border-radius: 2px;
-  padding: 12px 16px;
-  margin-bottom: 14px;
-}
+/* ── Chart ── */
+.chart-card { padding: 14px 16px; }
 canvas { display: block; width: 100%; }
 
-.footer {
-  font-size: 8px;
-  color: #1a2a4a;
-  text-align: right;
-  letter-spacing: 1px;
-}
+/* ── Footer ── */
+.footer { font-size: 9px; color: var(--dim); text-align: right; letter-spacing: 1px; margin-top: 8px; }
 
-/* ── Levels table ── */
-.levels-card {
-  background: #090f20;
-  border: 1px solid #1a2a4a;
-  border-radius: 2px;
-  padding: 14px 18px;
-  margin-bottom: 14px;
-}
-.levels-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-.levels-table th {
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: #4a6a9a;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  text-align: right;
-  border-bottom: 1px solid #0f1d35;
-  font-weight: normal;
-}
-.levels-table th:first-child { text-align: left; }
-.levels-table td {
-  padding: 8px 10px;
-  font-size: 13px;
-  text-align: right;
-  border-bottom: 1px solid #0a1428;
-  font-family: 'Courier New', monospace;
-}
-.levels-table td:first-child { text-align: left; }
-.levels-table tr:last-child td { border-bottom: none; }
-.levels-table tr.level-active td { background: #0d1830; }
-.levels-table tr.level-active .lv-label { color: #00d4ff; }
-.lv-label { color: #7a9abf; font-size: 11px; letter-spacing: 1px; }
-.lv-put  { color: #ff3b6b; }
-.lv-call { color: #00ff9d; }
-.lv-strike-put  { color: rgba(255,59,107,0.6); font-size: 11px; }
-.lv-strike-call { color: rgba(0,255,157,0.6);  font-size: 11px; }
-.lv-pct-put  { color: #ff3b6b; font-weight: 700; }
-.lv-pct-call { color: #00ff9d; font-weight: 700; }
+/* ── Levels table (hidden, replaced by strike-grid) ── */
+.levels-table { display: none; }
 
-/* Custom win rate row compact */
-.custom-row {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #0f1d35;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.custom-row .input-group { flex: 0 0 110px; }
-.custom-label { font-size: 9px; letter-spacing: 2px; color: #4a6a9a; text-transform: uppercase; margin-bottom: 4px; }
+/* ── Custom label compat ── */
+.lv-label { color: var(--label); font-size: 11px; }
+.lv-put   { color: var(--put); }
+.lv-call  { color: var(--call); }
+.lv-strike-put  { color: rgba(197,48,48,0.65); font-size: 11px; }
+.lv-strike-call { color: rgba(39,103,73,0.65); font-size: 11px; }
+.lv-pct-put  { color: var(--put); font-weight: 700; }
+.lv-pct-call { color: var(--call); font-weight: 700; }
+.level-active td { background: #ebf8ff !important; }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .output-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr 1fr; }
   .out-pct-put, .out-pct-call { font-size: 28px; }
-  .levels-table th, .levels-table td { padding: 6px 6px; font-size: 12px; }
+  .sc-strike-val { font-size: 26px; }
+  body { padding: 14px 12px; }
 }
 
 /* ── Historical Log ── */
 .hist-card {
-  background: #090f20;
-  border: 1px solid #1a2a4a;
-  border-radius: 2px;
-  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
   margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .hist-header {
   display: flex;
@@ -306,26 +333,26 @@ canvas { display: block; width: 100%; }
   gap: 12px;
 }
 .hist-controls select {
-  background: #0d1830;
-  border: 1px solid #1a2a4a;
-  color: #7a9abf;
-  font-family: 'Courier New', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--label);
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
   padding: 4px 8px;
+  border-radius: 4px;
   cursor: pointer;
 }
-.hist-status { font-size: 9px; letter-spacing: 1px; color: #2a4a6a; }
+.hist-status { font-size: 10px; color: var(--dim); }
 .hist-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .hist-table th {
-  font-size: 8px;
-  letter-spacing: 1.5px;
-  color: #4a6a9a;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--muted);
   text-transform: uppercase;
-  padding: 5px 8px;
+  padding: 6px 8px;
   text-align: right;
-  border-bottom: 1px solid #0f1d35;
-  font-weight: normal;
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 .hist-table th:first-child,
@@ -333,56 +360,56 @@ canvas { display: block; width: 100%; }
 .hist-table th:nth-child(3),
 .hist-table th:nth-child(4) { text-align: left; }
 .hist-table td {
-  padding: 6px 8px;
+  padding: 7px 8px;
   text-align: right;
-  border-bottom: 1px solid #080f1e;
-  font-family: 'Courier New', monospace;
-  color: #5a7a9a;
+  border-bottom: 1px solid var(--border2);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--label);
   white-space: nowrap;
 }
-.hist-table td:first-child { text-align: left; color: #4a6a8a; font-size: 10px; }
-.hist-table td:nth-child(2) { text-align: left; color: #7a9abf; }
+.hist-table td:first-child { text-align: left; color: var(--muted); font-size: 10px; font-family: -apple-system,sans-serif; }
+.hist-table td:nth-child(2) { text-align: left; color: var(--text); font-weight: 600; }
 .hist-table td:nth-child(3),
 .hist-table td:nth-child(4) { text-align: left; }
-.hist-table tr:hover td { background: #0a1428; }
-.hist-table tr.today-row td { background: #0d1830; }
-.hist-table tr.today-row td:first-child { color: #00d4ff; }
-.col-put  { color: rgba(255,59,107,0.7) !important; }
-.col-call { color: rgba(0,255,157,0.7) !important; }
-td.col-put  { color: rgba(255,59,107,0.9) !important; }
-td.col-call { color: rgba(0,255,157,0.9) !important; }
+.hist-table tr:hover td { background: var(--bg); }
+.hist-table tr.today-row td { background: #ebf8ff; }
+.hist-table tr.today-row td:first-child { color: var(--accent); font-weight: 600; }
+.col-put  { color: var(--put)  !important; font-weight: 600; }
+.col-call { color: var(--call) !important; font-weight: 600; }
+td.col-put  { color: var(--put)  !important; }
+td.col-call { color: var(--call) !important; }
 .hist-empty {
   text-align: center !important;
-  color: #2a4a6a !important;
+  color: var(--dim) !important;
   padding: 20px !important;
-  letter-spacing: 2px;
-  font-size: 10px !important;
+  font-size: 11px !important;
 }
 .vix-badge {
   display: inline-block;
-  padding: 1px 5px;
-  border-radius: 1px;
+  padding: 2px 6px;
+  border-radius: 3px;
   font-size: 9px;
+  font-weight: 600;
   letter-spacing: 1px;
 }
-.vb-low   { background: rgba(0,255,157,0.1);  color: #00ff9d; border: 1px solid rgba(0,255,157,0.2); }
-.vb-mid   { background: rgba(0,212,255,0.1);  color: #00d4ff; border: 1px solid rgba(0,212,255,0.2); }
-.vb-high  { background: rgba(255,165,0,0.1);  color: #ffa500; border: 1px solid rgba(255,165,0,0.2); }
-.vb-xhigh { background: rgba(255,59,107,0.1); color: #ff3b6b; border: 1px solid rgba(255,59,107,0.2); }
-.scorecard { display:flex; align-items:center; background:#070d1c; border:1px solid #1a2a4a; border-radius:2px; margin-bottom:14px; padding:12px 0; flex-wrap:wrap; }
+.vb-low   { background:#f0fff4; color:#276749; border:1px solid #9ae6b4; }
+.vb-mid   { background:#ebf8ff; color:#2b6cb0; border:1px solid #90cdf4; }
+.vb-high  { background:#fffaf0; color:#c05621; border:1px solid #fbd38d; }
+.vb-xhigh { background:#fff5f5; color:#c53030; border:1px solid #feb2b2; }
+.scorecard { display:flex; align-items:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:14px; padding:14px 0; flex-wrap:wrap; }
 .sc-block  { flex:1; text-align:center; padding:4px 16px; min-width:120px; }
-.sc-sep    { width:1px; height:40px; background:#1a2a4a; flex-shrink:0; }
-.sc-label  { font-size:8px; letter-spacing:2px; color:#4a6a9a; text-transform:uppercase; margin-bottom:4px; }
-.sc-pct    { font-size:22px; font-family:'Courier New',monospace; font-weight:bold; letter-spacing:1px; line-height:1.1; }
-.sc-record { font-size:9px; letter-spacing:1px; color:#3a5a7a; margin-top:2px; }
-.sc-win  { color:#00ff9d; }
-.sc-warn { color:#ffa500; }
-.sc-loss { color:#ff3b6b; }
-.outcome-win     { color:#00ff9d; font-size:10px; letter-spacing:1px; }
-.outcome-loss    { color:#ff3b6b; font-size:10px; letter-spacing:1px; }
-.outcome-pending { color:#2a4a6a; font-size:9px; letter-spacing:1px; }
-.loss-intra { color:#ffa500; }
-.loss-close { color:#ff3b6b; }
+.sc-sep    { width:1px; height:44px; background:var(--border); flex-shrink:0; }
+.sc-label  { font-size:9px; font-weight:600; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+.sc-pct    { font-size:22px; font-family:'SF Mono',monospace; font-weight:700; line-height:1.1; }
+.sc-record { font-size:10px; color:var(--dim); margin-top:2px; }
+.sc-win  { color:#276749; }
+.sc-warn { color:#c05621; }
+.sc-loss { color:#c53030; }
+.outcome-win     { color:#276749; font-size:10px; font-weight:600; }
+.outcome-loss    { color:#c53030; font-size:10px; font-weight:600; }
+.outcome-pending { color:var(--dim); font-size:9px; }
+.loss-intra { color:#c05621; }
+.loss-close { color:#c53030; }
 </style>
 </head>
 <body>
@@ -463,21 +490,79 @@ td.col-call { color: rgba(0,255,157,0.9) !important; }
   </div>
 </div>
 
-<!-- ── STRIKE LEVELS TABLE ────────────────────────────────────── -->
+<!-- ── STRIKE LEVELS ────────────────────────────────────────────── -->
 <div class="levels-card">
   <div class="section-title">◈ Strike Levels</div>
+
+  <!-- Prominent strike cards -->
+  <div class="strike-grid" id="strikeGrid">
+    <!-- 100% -->
+    <div class="strike-row-card" id="scard100">
+      <div class="strike-row-header">
+        <div class="strike-row-label" id="slabel100">100% WIN RATE</div>
+        <div style="font-size:10px;color:var(--muted)" id="smeta100">—</div>
+      </div>
+      <div class="strike-row-body">
+        <div class="strike-cell-put">
+          <div class="sc-side-label">PUT</div>
+          <div class="sc-strike-val placeholder" id="sput100">—</div>
+          <div class="sc-pct-move" id="sputpct100"></div>
+        </div>
+        <div class="strike-cell-div"></div>
+        <div class="strike-cell-call">
+          <div class="sc-side-label">CALL</div>
+          <div class="sc-strike-val placeholder" id="scall100">—</div>
+          <div class="sc-pct-move" id="scallpct100"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 99% -->
+    <div class="strike-row-card" id="scard99">
+      <div class="strike-row-header">
+        <div class="strike-row-label" id="slabel99">99% WIN RATE</div>
+        <div style="font-size:10px;color:var(--muted)" id="smeta99">—</div>
+      </div>
+      <div class="strike-row-body">
+        <div class="strike-cell-put">
+          <div class="sc-side-label">PUT</div>
+          <div class="sc-strike-val placeholder" id="sput99">—</div>
+          <div class="sc-pct-move" id="sputpct99"></div>
+        </div>
+        <div class="strike-cell-div"></div>
+        <div class="strike-cell-call">
+          <div class="sc-side-label">CALL</div>
+          <div class="sc-strike-val placeholder" id="scall99">—</div>
+          <div class="sc-pct-move" id="scallpct99"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 98% -->
+    <div class="strike-row-card" id="scard98">
+      <div class="strike-row-header">
+        <div class="strike-row-label" id="slabel98">98% WIN RATE</div>
+        <div style="font-size:10px;color:var(--muted)" id="smeta98">—</div>
+      </div>
+      <div class="strike-row-body">
+        <div class="strike-cell-put">
+          <div class="sc-side-label">PUT</div>
+          <div class="sc-strike-val placeholder" id="sput98">—</div>
+          <div class="sc-pct-move" id="sputpct98"></div>
+        </div>
+        <div class="strike-cell-div"></div>
+        <div class="strike-cell-call">
+          <div class="sc-side-label">CALL</div>
+          <div class="sc-strike-val placeholder" id="scall98">—</div>
+          <div class="sc-pct-move" id="scallpct98"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden legacy table (kept for JS compat) -->
   <table class="levels-table" id="levelsTable">
-    <thead>
-      <tr>
-        <th>Win Rate</th>
-        <th>Put % Move</th>
-        <th>Put Strike</th>
-        <th>Call % Move</th>
-        <th>Call Strike</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Win Rate</th><th>Put % Move</th><th>Put Strike</th><th>Call % Move</th><th>Call Strike</th></tr></thead>
     <tbody id="levelsBody">
-      <tr><td colspan="5" style="text-align:center;color:#2a4a6a;padding:16px;font-size:11px;letter-spacing:1px;">ENTER ALL 4 INPUTS TO SEE STRIKE LEVELS</td></tr>
+      <tr><td colspan="5" style="text-align:center;color:var(--dim);padding:16px;font-size:11px;">ENTER ALL 4 INPUTS TO SEE STRIKE LEVELS</td></tr>
     </tbody>
   </table>
 
@@ -487,8 +572,8 @@ td.col-call { color: rgba(0,255,157,0.9) !important; }
       <div class="custom-label">Custom Win Rate %</div>
       <input type="number" id="winRate" min="50" max="99.9" step="0.5" value="97" />
     </div>
-    <input type="range" id="winRateSlider" min="50" max="99.9" step="0.5" value="97" style="flex:1;height:4px;cursor:pointer;accent-color:#00d4ff;" />
-    <div class="win-rate-hint" id="winRateHint" style="font-size:8px;color:#2a4a6a;letter-spacing:1px;flex:1;padding-bottom:0;">97.00% — custom level shown highlighted above</div>
+    <input type="range" id="winRateSlider" min="50" max="99.9" step="0.5" value="97" style="flex:1;height:4px;cursor:pointer;accent-color:var(--accent);" />
+    <div class="win-rate-hint" id="winRateHint">97.00% — custom level shown highlighted above</div>
   </div>
 </div>
 
@@ -675,33 +760,33 @@ function drawChart(bucket, winRate, spxOpenEst) {
     const barH = (bins[i] / maxBin) * (H - 20);
     const cx = x + bw / 2;
     let color;
-    if (cx < putX)       color = 'rgba(255,59,107,0.55)';
-    else if (cx > callX) color = 'rgba(0,255,157,0.55)';
-    else                 color = 'rgba(50,120,200,0.45)';
+    if (cx < putX)       color = 'rgba(197,48,48,0.4)';
+    else if (cx > callX) color = 'rgba(39,103,73,0.4)';
+    else                 color = 'rgba(43,108,176,0.3)';
     ctx.fillStyle = color;
     ctx.fillRect(x, H - 20 - barH, Math.max(1, bw - 1), barH);
   }
 
   // Zero line
-  ctx.strokeStyle = '#2a4a7a';
+  ctx.strokeStyle = '#cbd5e0';
   ctx.lineWidth = 1;
   ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(zeroX, 0); ctx.lineTo(zeroX, H - 20); ctx.stroke();
   ctx.setLineDash([]);
 
   // Put strike line
-  ctx.strokeStyle = '#ff3b6b';
+  ctx.strokeStyle = '#c53030';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(putX, 0); ctx.lineTo(putX, H - 20); ctx.stroke();
 
   // Call strike line
-  ctx.strokeStyle = '#00ff9d';
+  ctx.strokeStyle = '#276749';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(callX, 0); ctx.lineTo(callX, H - 20); ctx.stroke();
 
   // X-axis labels
-  ctx.fillStyle = '#3a5a8a';
-  ctx.font = '7px Courier New';
+  ctx.fillStyle = '#a0aec0';
+  ctx.font = '7px -apple-system, sans-serif';
   ctx.textAlign = 'center';
   const labelPcts = [-0.06, -0.04, -0.02, 0, 0.02, 0.04, 0.06];
   for (const lp of labelPcts) {
@@ -711,12 +796,12 @@ function drawChart(bucket, winRate, spxOpenEst) {
   }
 
   // Strike labels
-  ctx.font = '8px Courier New';
-  ctx.fillStyle = '#ff3b6b';
+  ctx.font = '8px -apple-system, sans-serif';
+  ctx.fillStyle = '#c53030';
   ctx.textAlign = putX < W / 2 ? 'left' : 'right';
   ctx.fillText('PUT ' + fmtPct(putPct, 2), putX + (putX < W/2 ? 3 : -3), 12);
 
-  ctx.fillStyle = '#00ff9d';
+  ctx.fillStyle = '#276749';
   ctx.textAlign = callX > W / 2 ? 'right' : 'left';
   ctx.fillText('CALL ' + fmtPct(callPct, 2), callX + (callX > W/2 ? -3 : 3), 12);
 }
@@ -759,7 +844,18 @@ function update() {
 
   if (!hasAll) {
     document.getElementById('spxOpenBanner').style.display = 'none';
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#2a4a6a;padding:16px;font-size:11px;letter-spacing:1px;">ENTER ALL 4 INPUTS TO SEE STRIKE LEVELS</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--dim);padding:16px;font-size:11px;">ENTER ALL 4 INPUTS TO SEE STRIKE LEVELS</td></tr>`;
+    // Clear big cards
+    [98,99,100].forEach(lvl => {
+      document.getElementById(`sput${lvl}`).textContent  = '—';
+      document.getElementById(`scall${lvl}`).textContent = '—';
+      document.getElementById(`sput${lvl}`).classList.add('placeholder');
+      document.getElementById(`scall${lvl}`).classList.add('placeholder');
+      document.getElementById(`sputpct${lvl}`).textContent  = '';
+      document.getElementById(`scallpct${lvl}`).textContent = '';
+      document.getElementById(`smeta${lvl}`).textContent = '—';
+      document.getElementById(`scard${lvl}`).classList.remove('row-active');
+    });
     document.getElementById('statRange').textContent = '—';
     document.getElementById('statN').textContent = '—';
     document.getElementById('statMedian').textContent = '—';
@@ -811,6 +907,29 @@ function update() {
       <td><span class="lv-strike-call">${callS.toLocaleString()}</span></td>
     </tr>`;
   }).join('') + `<tr><td colspan="5" style="font-size:8px;color:#2a3a5a;padding:4px 10px;letter-spacing:1px;">* 100% uses 99.99th percentile (max historical boundary)</td></tr>`;
+
+  // ── Populate big strike cards ──
+  [98, 99, 100].forEach(lvl => {
+    const wr = lvl === 100 ? 0.9999 : lvl / 100;
+    const { putPct, callPct } = getPercentile(arr, wr);
+    const putS  = fmtPutStrike(spxOpenEst, putPct);
+    const callS = fmtCallStrike(spxOpenEst, callPct);
+    const ptsDown = (putS  - spxOpenEst).toFixed(0);
+    const ptsUp   = (callS - spxOpenEst).toFixed(0);
+
+    document.getElementById(`sput${lvl}`).textContent  = putS.toLocaleString();
+    document.getElementById(`scall${lvl}`).textContent = callS.toLocaleString();
+    document.getElementById(`sput${lvl}`).classList.remove('placeholder');
+    document.getElementById(`scall${lvl}`).classList.remove('placeholder');
+    document.getElementById(`sputpct${lvl}`).textContent  = fmtPct(putPct, 2)  + ' · ' + ptsDown + ' pts';
+    document.getElementById(`scallpct${lvl}`).textContent = fmtPct(callPct, 2) + ' · +' + ptsUp  + ' pts';
+
+    const isActive = Math.abs(lvl - customPct) < 0.05;
+    document.getElementById(`scard${lvl}`).classList.toggle('row-active', isActive);
+    document.getElementById(`slabel${lvl}`).classList.toggle('active-label', isActive);
+    document.getElementById(`smeta${lvl}`).textContent =
+      `Put ${fmtPct(putPct,2)} / Call ${fmtPct(callPct,2)}`;
+  });
 
   // Stats
   document.getElementById('statRange').textContent =
