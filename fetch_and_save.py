@@ -63,7 +63,6 @@ def fetch_with_retry(ticker_sym, period="5d", retries=4, delay=15):
                 interval="1d",
                 auto_adjust=True,
                 progress=False,
-                show_errors=False,
             )
             if df is not None and not df.empty:
                 return df
