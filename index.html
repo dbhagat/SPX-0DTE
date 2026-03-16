@@ -556,6 +556,26 @@ td.col-call { color: var(--call) !important; }
         </div>
       </div>
     </div>
+    <!-- Custom % — shown only when different from 98/99/100 -->
+    <div class="strike-row-card row-active" id="scardCustom" style="display:none">
+      <div class="strike-row-header" style="background:#ebf4ff;border-bottom-color:#bee3f8">
+        <div class="strike-row-label active-label" id="slabelCustom">CUSTOM WIN RATE</div>
+        <div style="font-size:10px;color:var(--muted)" id="smetaCustom">—</div>
+      </div>
+      <div class="strike-row-body">
+        <div class="strike-cell-put">
+          <div class="sc-side-label">PUT</div>
+          <div class="sc-strike-val placeholder" id="sputCustom">—</div>
+          <div class="sc-pct-move" id="sputpctCustom"></div>
+        </div>
+        <div class="strike-cell-div"></div>
+        <div class="strike-cell-call">
+          <div class="sc-side-label">CALL</div>
+          <div class="sc-strike-val placeholder" id="scallCustom">—</div>
+          <div class="sc-pct-move" id="scallpctCustom"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Hidden legacy table (kept for JS compat) -->
@@ -570,10 +590,10 @@ td.col-call { color: var(--call) !important; }
   <div class="custom-row">
     <div class="input-group" style="flex:0 0 130px">
       <div class="custom-label">Custom Win Rate %</div>
-      <input type="number" id="winRate" min="50" max="99.9" step="0.5" value="97" />
+      <input type="number" id="winRate" min="50" max="99.9" step="0.5" value="90" />
     </div>
-    <input type="range" id="winRateSlider" min="50" max="99.9" step="0.5" value="97" style="flex:1;height:4px;cursor:pointer;accent-color:var(--accent);" />
-    <div class="win-rate-hint" id="winRateHint">97.00% — custom level shown highlighted above</div>
+    <input type="range" id="winRateSlider" min="50" max="99.9" step="0.5" value="90" style="flex:1;height:4px;cursor:pointer;accent-color:var(--accent);" />
+    <div class="win-rate-hint" id="winRateHint">90.00% — custom level shown highlighted above</div>
   </div>
 </div>
 
@@ -819,7 +839,7 @@ function update() {
   const customDisp    = (customWinRate * 100).toFixed(2);
 
   document.getElementById('winRateHint').textContent =
-    `${customDisp}% — custom level shown highlighted above`;
+    `${customDisp}% — custom level shown below`;
 
   const hasAll = !isNaN(spyOpen) && !isNaN(priorSpxClose) && !isNaN(priorSpyClose) && !isNaN(priorVix);
 
@@ -856,6 +876,13 @@ function update() {
       document.getElementById(`smeta${lvl}`).textContent = '—';
       document.getElementById(`scard${lvl}`).classList.remove('row-active');
     });
+    document.getElementById('scardCustom').style.display = 'none';
+    document.getElementById('sputCustom').textContent  = '—';
+    document.getElementById('scallCustom').textContent = '—';
+    document.getElementById('sputCustom').classList.add('placeholder');
+    document.getElementById('scallCustom').classList.add('placeholder');
+    document.getElementById('sputpctCustom').textContent  = '';
+    document.getElementById('scallpctCustom').textContent = '';
     document.getElementById('statRange').textContent = '—';
     document.getElementById('statN').textContent = '—';
     document.getElementById('statMedian').textContent = '—';
@@ -923,13 +950,31 @@ function update() {
     document.getElementById(`scall${lvl}`).classList.remove('placeholder');
     document.getElementById(`sputpct${lvl}`).textContent  = fmtPct(putPct, 2)  + ' · ' + ptsDown + ' pts';
     document.getElementById(`scallpct${lvl}`).textContent = fmtPct(callPct, 2) + ' · +' + ptsUp  + ' pts';
+    document.getElementById(`smeta${lvl}`).textContent = `Put ${fmtPct(putPct,2)} / Call ${fmtPct(callPct,2)}`;
 
+    // Highlight if custom matches this fixed level
     const isActive = Math.abs(lvl - customPct) < 0.05;
     document.getElementById(`scard${lvl}`).classList.toggle('row-active', isActive);
     document.getElementById(`slabel${lvl}`).classList.toggle('active-label', isActive);
-    document.getElementById(`smeta${lvl}`).textContent =
-      `Put ${fmtPct(putPct,2)} / Call ${fmtPct(callPct,2)}`;
   });
+
+  // ── Custom card — always shown ──
+  const customCard = document.getElementById('scardCustom');
+  const { putPct: cPutPct, callPct: cCallPct } = getPercentile(arr, customWinRate);
+  const cPutS  = fmtPutStrike(spxOpenEst, cPutPct);
+  const cCallS = fmtCallStrike(spxOpenEst, cCallPct);
+  const cPtsDown = (cPutS  - spxOpenEst).toFixed(0);
+  const cPtsUp   = (cCallS - spxOpenEst).toFixed(0);
+
+  document.getElementById('slabelCustom').textContent   = customPct.toFixed(1) + '% WIN RATE  ◀  CUSTOM';
+  document.getElementById('sputCustom').textContent     = cPutS.toLocaleString();
+  document.getElementById('scallCustom').textContent    = cCallS.toLocaleString();
+  document.getElementById('sputCustom').classList.remove('placeholder');
+  document.getElementById('scallCustom').classList.remove('placeholder');
+  document.getElementById('sputpctCustom').textContent  = fmtPct(cPutPct, 2) + ' · ' + cPtsDown + ' pts';
+  document.getElementById('scallpctCustom').textContent = fmtPct(cCallPct, 2) + ' · +' + cPtsUp  + ' pts';
+  document.getElementById('smetaCustom').textContent    = `Put ${fmtPct(cPutPct,2)} / Call ${fmtPct(cCallPct,2)}`;
+  customCard.style.display = 'block';
 
   // Stats
   document.getElementById('statRange').textContent =
