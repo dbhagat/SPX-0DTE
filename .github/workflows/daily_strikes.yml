@@ -2,35 +2,86 @@ name: Daily Strike Logger
 
 on:
   schedule:
-    # 9:35 AM ET = 13:35 UTC (EST) / 14:35 UTC (EDT)
-    # Using 13:35 UTC to cover EST (Nov-Mar); adjust to 13:35 in summer if needed
-    # A safe bet: run at both times with a duplicate-check in the script
-    - cron: '35 13 * * 1-5'   # 9:35 AM EST (winter)
-    - cron: '35 14 * * 1-5'   # 10:35 AM EST (backup / EDT summer)
+    # ── Job 1: Write context.json at 9:25am ET ──
+    - cron: '25 14 * * 1-5'   # 9:25 AM EDT (summer)
+    - cron: '25 13 * * 1-5'   # 9:25 AM EST (winter) — GitHub keeps both, harmless duplicate
 
-  # Allow manual trigger from GitHub Actions tab for testing
+    # ── Job 2: Save strikes to Supabase at 9:35am ET ──
+    - cron: '35 14 * * 1-5'   # 9:35 AM EDT (summer)
+    - cron: '35 13 * * 1-5'   # 9:35 AM EST (winter)
+
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - context_only
+          - strikes_only
+          - both
 
 jobs:
-  log_strikes:
+  # ── JOB 1: Context JSON (runs at :25) ────────────────────────────────────────
+  write_context:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    # Run this job when triggered at :25, or manually with context_only/both
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule')
+
+    permissions:
+      contents: write   # needed to push context.json via API
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - run: pip install yfinance requests pytz
+
+      - name: Write context.json
+        env:
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GITHUB_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY:   ${{ github.repository }}
         run: |
-          pip install yfinance requests pytz
+          # Skip strikes job if manual and only context requested
+          if [ "${{ github.event.inputs.job }}" = "strikes_only" ]; then
+            echo "Skipping context job (strikes_only selected)"
+            exit 0
+          fi
+          python write_context.py
+
+  # ── JOB 2: Strike Logger (runs at :35) ───────────────────────────────────────
+  log_strikes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install yfinance requests pytz pandas
 
       - name: Run strike logger
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python fetch_and_save.py
+        run: |
+          if [ "${{ github.event.inputs.job }}" = "context_only" ]; then
+            echo "Skipping strikes job (context_only selected)"
+            exit 0
+          fi
+          python fetch_and_save.py
