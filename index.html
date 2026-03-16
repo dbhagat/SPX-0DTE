@@ -289,6 +289,20 @@ canvas { display: block; width: 100%; }
 /* ── Footer ── */
 .footer { font-size: 9px; color: var(--dim); text-align: right; letter-spacing: 1px; margin-top: 8px; }
 
+/* ── Auto-load button & status ── */
+.inputs-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+.load-btn { background:var(--accent); color:white; border:none; border-radius:6px; padding:7px 14px; font-size:11px; font-weight:600; cursor:pointer; letter-spacing:.5px; transition:background .15s,opacity .15s; white-space:nowrap; }
+.load-btn:hover { background:#1e4e8c; }
+.load-btn:disabled { opacity:.5; cursor:not-allowed; }
+.load-status { font-size:11px; margin-bottom:12px; min-height:16px; }
+.load-status.ok   { color:#276749; }
+.load-status.err  { color:#c53030; }
+.load-status.info { color:var(--muted); }
+.input-badge { display:inline-block; font-size:8px; font-weight:600; letter-spacing:1px; padding:1px 5px; border-radius:3px; text-transform:uppercase; background:#e2e8f0; color:var(--muted); vertical-align:middle; margin-left:4px; }
+.auto-badge  { background:#c6f6d5 !important; color:#276749 !important; }
+.spy-open-group .input-label { color:var(--accent); font-weight:700; }
+.spy-open-group input { border-color:var(--accent); background:#ebf4ff; }
+
 /* ── Levels table (hidden, replaced by strike-grid) ── */
 .levels-table { display: none; }
 
@@ -422,25 +436,32 @@ td.col-call { color: var(--call) !important; }
 
 <!-- ── INPUTS ─────────────────────────────────────────────────── -->
 <div class="inputs-card">
-  <div class="section-title">◈ Daily Inputs</div>
+  <div class="inputs-header">
+    <div class="section-title" style="margin-bottom:0">◈ Daily Inputs</div>
+    <button class="load-btn" id="loadBtn" onclick="loadPriorCloses()">
+      <span id="loadBtnText">⟳ Auto-Load Prior Closes</span>
+    </button>
+  </div>
+  <div class="load-status" id="loadStatus"></div>
+
   <div class="inputs-grid">
-    <div class="input-group">
-      <div class="input-label">SPY Open</div>
+    <div class="input-group spy-open-group">
+      <div class="input-label">SPY Open <span class="input-badge">Enter manually</span></div>
       <input type="number" id="spyOpen" step="0.01" placeholder="e.g. 574.50" />
       <div class="input-sub">Today's SPY opening price</div>
     </div>
     <div class="input-group">
-      <div class="input-label">Prior SPX Close</div>
+      <div class="input-label">Prior SPX Close <span class="input-badge auto-badge" id="badgeSpx" style="display:none">Auto-loaded</span></div>
       <input type="number" id="priorSpxClose" step="0.01" placeholder="e.g. 5748.90" />
       <div class="input-sub">Yesterday's SPX close</div>
     </div>
     <div class="input-group">
-      <div class="input-label">Prior SPY Close</div>
+      <div class="input-label">Prior SPY Close <span class="input-badge auto-badge" id="badgeSpy" style="display:none">Auto-loaded</span></div>
       <input type="number" id="priorSpyClose" step="0.01" placeholder="e.g. 572.80" />
       <div class="input-sub">Yesterday's SPY close</div>
     </div>
     <div class="input-group">
-      <div class="input-label">Prior VIX Close</div>
+      <div class="input-label">Prior VIX Close <span class="input-badge auto-badge" id="badgeVix" style="display:none">Auto-loaded</span></div>
       <input type="number" id="priorVix" step="0.01" placeholder="e.g. 17.50" />
       <div class="input-sub">Yesterday's VIX close</div>
     </div>
@@ -463,8 +484,6 @@ td.col-call { color: var(--call) !important; }
     </div>
     <div class="vix-bucket-text" id="vixBucketText"></div>
   </div>
-
-  <!-- Win rate control removed to levels card below -->
 </div>
 
 <!-- ── SPX OPEN ESTIMATE ──────────────────────────────────────── -->
@@ -1134,8 +1153,96 @@ async function loadHistory() {
   }
 }
 
-// Load on page init
-loadHistory();
+// ── AUTO-LOAD PRIOR CLOSES ───────────────────────────────────────────────────
+// Option B: read context.json written by GitHub Actions at 9:25am ET
+// Option A: live Yahoo Finance via CORS proxy (fallback)
+
+const CONTEXT_JSON_URL = 'https://dbhagat.github.io/SPX-0DTE/context.json';
+const CORS_PROXY       = 'https://api.allorigins.win/raw?url=';
+
+function setStatus(msg, type='info') {
+  const el = document.getElementById('loadStatus');
+  el.textContent = msg;
+  el.className = 'load-status ' + type;
+}
+
+function fillInputs(spx, spy, vix, source) {
+  document.getElementById('priorSpxClose').value = spx;
+  document.getElementById('priorSpyClose').value = spy;
+  document.getElementById('priorVix').value       = vix;
+  ['Spx','Spy','Vix'].forEach(k => {
+    document.getElementById('badge' + k).style.display = 'inline-block';
+  });
+  setStatus(`✓ Loaded via ${source} — SPX ${spx} · SPY ${spy} · VIX ${vix}`, 'ok');
+  update(); // recalculate immediately
+}
+
+// Option B: context.json from repo
+async function tryContextJson() {
+  const url = CONTEXT_JSON_URL + '?t=' + Date.now(); // cache-bust
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`context.json HTTP ${resp.status}`);
+  const data = await resp.json();
+
+  // Validate it's for today
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  if (data.date !== today) {
+    throw new Error(`context.json is from ${data.date}, not today (${today}) — market may not be open yet`);
+  }
+  return data;
+}
+
+// Option A: Yahoo Finance via CORS proxy
+async function tryYahooProxy() {
+  const tickers = ['^GSPC', 'SPY', '^VIX'];
+  const results = await Promise.all(tickers.map(async t => {
+    const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=5d`;
+    const resp  = await fetch(CORS_PROXY + encodeURIComponent(yUrl));
+    if (!resp.ok) throw new Error(`Yahoo ${t}: HTTP ${resp.status}`);
+    const json  = await resp.json();
+    const closes = json.chart.result[0].indicators.quote[0].close;
+    // Get last non-null close
+    const close = [...closes].reverse().find(v => v != null);
+    return Math.round(close * 100) / 100;
+  }));
+  return { prior_spx_close: results[0], prior_spy_close: results[1], prior_vix_close: results[2] };
+}
+
+async function loadPriorCloses() {
+  const btn = document.getElementById('loadBtn');
+  btn.disabled = true;
+  document.getElementById('loadBtnText').textContent = '⟳ Loading...';
+  setStatus('Trying context.json (Option B)...', 'info');
+
+  try {
+    // ── Option B: context.json ──
+    const data = await tryContextJson();
+    fillInputs(data.prior_spx_close, data.prior_spy_close, data.prior_vix_close,
+               `context.json (${data.generated_at})`);
+  } catch(errB) {
+    console.warn('Option B failed:', errB.message);
+    setStatus(`context.json unavailable (${errB.message}) — trying live feed...`, 'info');
+
+    try {
+      // ── Option A: Yahoo via proxy ──
+      const data = await tryYahooProxy();
+      fillInputs(data.prior_spx_close, data.prior_spy_close, data.prior_vix_close,
+                 'Yahoo Finance (live proxy)');
+    } catch(errA) {
+      console.error('Option A failed:', errA.message);
+      setStatus(`⚠ Auto-load failed — enter values manually. (${errA.message})`, 'err');
+    }
+  }
+
+  btn.disabled = false;
+  document.getElementById('loadBtnText').textContent = '⟳ Auto-Load Prior Closes';
+}
+
+// Auto-trigger on page load
+window.addEventListener('load', () => {
+  loadHistory();
+  loadPriorCloses();
+});
 </script>
 </body>
 </html>
