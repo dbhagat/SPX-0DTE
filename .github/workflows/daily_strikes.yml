@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - run: pip install yfinance requests pytz
+      - run: pip install yfinance requests pytz pandas
 
       - name: Write context.json
         env:
