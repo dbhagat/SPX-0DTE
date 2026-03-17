@@ -1,8 +1,8 @@
 {
   "date": "2026-03-17",
-  "prior_spx_close": 6723.05,
-  "prior_spy_close": 671.31,
-  "prior_vix_close": 22.23,
+  "prior_spx_close": 6715.13,
+  "prior_spy_close": 670.56,
+  "prior_vix_close": 22.33,
   "vix_bucket": 8,
-  "generated_at": "2026-03-17 11:35 ET"
+  "generated_at": "2026-03-17 11:38 ET"
 }
