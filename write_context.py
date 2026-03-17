@@ -11,7 +11,7 @@ This script is called at 9:25am for context.json only.
 fetch_and_save.py (existing) still runs at 9:35am for Supabase.
 """
 
-import os, sys, json, re, requests
+import os, sys, json, re, requests, time
 from datetime import date, datetime, timedelta
 import pytz
 import yfinance as yf
@@ -32,15 +32,46 @@ def get_vix_bucket(vix):
 
 
 def fetch_prior_closes():
-    """Fetch prior day closes for SPX, SPY, VIX."""
+    """
+    Fetch prior day closes for SPX, SPY, VIX.
+    Uses yf.download() with retry to avoid rate limits.
+    Uses iloc[-2] to get the confirmed prior close, not today's intraday data.
+    At 9:25am ET the market is already open, so iloc[-1] = today (wrong).
+    """
     print("Fetching prior closes from Yahoo Finance...")
-    spx = yf.Ticker("^GSPC").history(period="5d")
-    spy = yf.Ticker("SPY").history(period="5d")
-    vix = yf.Ticker("^VIX").history(period="5d")
 
-    prior_spx = float(spx["Close"].iloc[-1])
-    prior_spy = float(spy["Close"].iloc[-1])
-    prior_vix = float(vix["Close"].iloc[-1])
+    def fetch_with_retry(sym, retries=4, delay=15):
+        for attempt in range(1, retries + 1):
+            try:
+                df = yf.download(sym, period="5d", interval="1d",
+                                 auto_adjust=True, progress=False)
+                if df is not None and not df.empty:
+                    return df
+                raise ValueError(f"Empty data for {sym}")
+            except Exception as e:
+                if attempt == retries:
+                    raise
+                wait = delay * attempt
+                print(f"  Attempt {attempt} failed for {sym}: {e} — retrying in {wait}s...")
+                time.sleep(wait)
+
+    import pandas as pd
+
+    def get_col(df, col):
+        if isinstance(df.columns, pd.MultiIndex):
+            return df[col].iloc[:, 0]
+        return df[col]
+
+    spx_df = fetch_with_retry("^GSPC")
+    time.sleep(3)
+    spy_df = fetch_with_retry("SPY")
+    time.sleep(3)
+    vix_df = fetch_with_retry("^VIX")
+
+    # iloc[-2] = confirmed prior day close (iloc[-1] = today's intraday, wrong at 9:25am)
+    prior_spx = round(float(get_col(spx_df, "Close").iloc[-2]), 2)
+    prior_spy = round(float(get_col(spy_df, "Close").iloc[-2]), 2)
+    prior_vix = round(float(get_col(vix_df, "Close").iloc[-2]), 2)
 
     print(f"  Prior SPX close: {prior_spx:.2f}")
     print(f"  Prior SPY close: {prior_spy:.2f}")
